@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Solana & jupSOL Tracker</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #000; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .terminal { background: #111; border: 2px solid #14F195; border-radius: 12px; padding: 30px; width: 380px; box-shadow: 0 0 30px rgba(20, 241, 149, 0.2); }
+        .label { color: #888; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1.5px; }
+        .price-box { margin: 25px 0; border-bottom: 1px solid #333; padding-bottom: 15px; }
+        .price { font-size: 2.4rem; font-weight: bold; margin-top: 5px; color: #fff; }
+        .premium { color: #14F195; font-size: 1rem; margin-top: 5px; font-weight: bold; }
+        #status { font-size: 0.75rem; color: #555; margin-top: 20px; font-family: monospace; }
+        .token-name { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+
+<div class="terminal">
+    <div class="label">Solana Ecosystem Pulse</div>
+
+    <div class="price-box">
+        <div class="token-name">SOL <span style="font-size: 0.7rem; color:#444;">Native</span></div>
+        <div id="sol-price" class="price">Connecting...</div>
+    </div>
+
+    <div class="price-box">
+        <div class="token-name">jupSOL <span style="font-size: 0.7rem; color:#444;">Liquid Staked</span></div>
+        <div id="jupsol-price" class="price">Connecting...</div>
+        <div id="premium-val" class="premium"></div>
+    </div>
+
+    <div id="status">> SYSTEM IDLE</div>
+</div>
+
+<script>
+    // These are the "Social Security Numbers" for each token on Solana
+    const SOL_ID = 'So11111111111111111111111111111111111111112';
+    const JUPSOL_ID = 'jupSoLaHXQiZZTSfEWMTRRgpnyFm8f6sZdosWBjx93v';
+
+    async function getPrices() {
+        const status = document.getElementById('status');
+        try {
+            // Using Jupiter's Lite API which is better for web tools
+            const url = `https://api.jup.ag/price/v2?ids=${SOL_ID},${JUPSOL_ID}`;
+            
+            const response = await fetch(url);
+            const result = await response.json();
+
+            // Extract values from the JSON data
+            const solData = result.data[SOL_ID].price;
+            const jupData = result.data[JUPSOL_ID].price;
+
+            // Update the display
+            document.getElementById('sol-price').innerText = `$${parseFloat(solData).toFixed(2)}`;
+            document.getElementById('jupsol-price').innerText = `$${parseFloat(jupData).toFixed(2)}`;
+
+            // Calculate the LST Premium (jupSOL price vs SOL price)
+            const premium = ((jupData / solData - 1) * 100).toFixed(2);
+            document.getElementById('premium-val').innerText = `Yield Premium: +${premium}%`;
+
+            status.innerHTML = `> UPDATE SUCCESS: ${new Date().toLocaleTimeString()}`;
+        } catch (error) {
+            status.innerHTML = `> ERROR: Connection failed. Retrying...`;
+            console.error("API Error:", error);
+        }
+    }
+
+    // Run once at start and then every 10 seconds
+    getPrices();
+    setInterval(getPrices, 10000);
+</script>
+
+</body>
+</html>
